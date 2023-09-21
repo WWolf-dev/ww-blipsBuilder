@@ -41,12 +41,12 @@ if FrameworkUse == "ESX" then
                     end
                 },
                 {
-                    title = "Supprimer un blip",
-                    description = "Supprimer un blip à proximité",
+                    title = "Liste des blips",
+                    description = "Liste des blips à proximité",
                     icon = "fa-solid fa-card",
                     onSelect = function()
                         if DebugMode then
-                            print("Running blip deletion")
+                            print("Running blip List")
                         end
                     end
                 }
@@ -96,7 +96,7 @@ if FrameworkUse == "ESX" then
                 icon = 'hashtag',
                 required = true,
                 min = 1,
-                max = 255
+                max = 254
             },
             {
                 type = 'input',
@@ -147,6 +147,49 @@ if FrameworkUse == "ESX" then
             print("Blip alpha:", tonumber(input[4]))
             print("Blip name:", input[5])
         end
+
+        local coords = GetEntityCoords(PlayerPedId())
+        local blipData = {
+            name = input[5],
+            sprite = tonumber(input[1]),
+            size = tonumber(input[2]),
+            color = tonumber(input[3]),
+            alpha = tonumber(input[4]),
+            coords = {
+                x = math.round(coords.x, 2),
+                y = math.floor(coords.y, 2),
+                z = math.floor(coords.z, 2)
+            }
+        }
+
+        TriggerServerEvent('ww-blipsbuilder:Server:storeBlipInDB', blipData)
+    end
+
+    function LoadAllBlipsFromDB()
+        -- Fetch all blips from the server
+        ESX.TriggerServerCallback('getAllBlipsFromDB', function(blips)
+            if blips then
+                for _, blipData in ipairs(blips) do
+                    -- Convert stored JSON coords back to a table
+                    local coords = json.decode(blipData.blip_coords)
+
+                    -- Create the blip using the retrieved data
+                    local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
+
+                    SetBlipSprite(blip, blipData.blip_sprite)
+                    SetBlipDisplay(blip, 4)
+                    SetBlipScale(blip, blipData.blip_size)
+                    SetBlipColour(blip, blipData.blip_color)
+                    SetBlipAlpha(blip, blipData.blip_alpha)
+                    SetBlipAsShortRange(blip, true)
+
+                    -- Set blip name
+                    BeginTextCommandSetBlipName("STRING")
+                    AddTextComponentSubstringPlayerName(blipData.blip_name)
+                    EndTextCommandSetBlipName(blip)
+                end
+            end
+        end)
     end
 
     -- Register a command for admin users to create blips
