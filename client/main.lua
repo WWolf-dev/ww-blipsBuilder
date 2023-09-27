@@ -20,6 +20,8 @@ if FrameworkUse == "ESX" then
     AddEventHandler(playerLoadedEvent, function(xPlayer)
         ESX.PlayerData = xPlayer  -- Store player data locally
         PlayerLoaded = true
+
+        LoadAllBlipsFromDB()
     end)
 
     AddEventHandler("onResourceStart", function(resource)
